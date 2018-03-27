@@ -678,7 +678,7 @@ static int wwan_add_ul_flt_rule_to_ipa(void)
 	req->install_status = QMI_RESULT_SUCCESS_V01;
 	req->filter_index_list_len = num_q6_rule;
 	mutex_lock(&ipa_qmi_lock);
-	for (i = 0; i < num_q6_rule; i++) {
+	for (i = 0; i < num_q6_rule && (ipa_qmi_ctx != NULL); i++) {
 		if (ipa_qmi_ctx->q6_ul_filter_rule[i].ip == IPA_IP_v4) {
 			req->filter_index_list[i].filter_index = num_v4_rule;
 			num_v4_rule++;
@@ -2673,10 +2673,7 @@ int rmnet_ipa_query_tethering_stats(struct wan_ioctl_query_tether_stats *data,
 		IPAWANERR("reset the pipe stats\n");
 	} else {
 		/* print tethered-client enum */
-		if (data == NULL)
-			return -EINVAL;
-		IPAWANDBG_LOW("Tethered-client enum(%d)\n",
-				data->ipa_client);
+		IPAWANDBG_LOW("Tethered-client enum(%d)\n", data->ipa_client);
 	}
 
 	rc = ipa_qmi_get_data_stats(req, resp);
@@ -2685,7 +2682,8 @@ int rmnet_ipa_query_tethering_stats(struct wan_ioctl_query_tether_stats *data,
 		kfree(req);
 		kfree(resp);
 		return rc;
-	} else if (reset) {
+             /* W/A fix for USB tehter stats. minkeun.kwon*/
+	} else if (data == NULL) {
 		kfree(req);
 		kfree(resp);
 		return 0;
